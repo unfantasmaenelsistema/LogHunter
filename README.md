@@ -13,7 +13,7 @@
   [![GitHub Pages Ready](https://img.shields.io/badge/Deploy-GitHub%20Pages%20Ready-0ea5e9?style=flat-square)](#despliegue-en-github-pages)
   [![License: MIT](https://img.shields.io/badge/Licencia-MIT-zinc?style=flat-square)](LICENSE)
 
-  [Visitar Un Fantasma en el Sistema](https://www.unfantasmaenelsistema.com/)
+  [**▶ Abrir LogHunter en vivo**](https://unfantasmaenelsistema.github.io/LogHunter/) · [unfantasmaenelsistema.com](https://www.unfantasmaenelsistema.com/)
 </div>
 
 ---

@@ -46,7 +46,7 @@ Anclaje de evidencias sospechosas desde cualquier vista, reconstrucción cronol�
 ![Línea Temporal y Correlación Blue Team](docs/screenshots/03-linea-temporal-correlacion.png)
 
 ### 4. Constructor Interactivo de Reglas Sigma y Evaluador Local
-Formulario dividido con generación de **YAML Sigma** en tiempo real, plantillas rápidas, modificadores (`|contains`, `|startswith`, `|endswith`), listas `OR` y expresiones booleanas (`and`, `or`, `not`).
+Formulario dividido con generación de **YAML Sigma** en tiempo real, plantillas rápidas, modificadores (`|contains`, `|startswith`, `|endswith`), listas `OR`, expresiones booleanas (`and`, `or`, `not`, paréntesis) y agregaciones (`1 of selection*`, `all of them`). Si la condición referencia un bloque inexistente o está mal formada, el evaluador lo indica.
 
 ![Constructor de Reglas Sigma](docs/screenshots/04-constructor-sigma.png)
 
@@ -75,7 +75,8 @@ Tres escenarios guiados con inyección aislada de datasets, validación de Flags
 
 - **Motor de Datos Mixto (`LogDataEngine`)**: 72 eventos por defecto en las últimas 24 horas combinando tráfico corporativo legítimo con una cadena de intrusión realista multi-etapa.
 - **Guía Rápida Blue Team integrada**: Chuleta accesible desde la cabecera con referencia de Event IDs, Logon Types, patrones HTTP maliciosos y sintaxis Sigma.
-- **Importador BYOL**: Parser automático para registros CLF de Apache/Nginx, Syslog de Linux y objetos JSON/NDJSON sin salir del navegador.
+- **Importador BYOL**: Parser automático para registros CLF de Apache/Nginx, Syslog de Linux (formato clásico o ISO 8601, con `sshd` y `sudo`) y objetos JSON/NDJSON sin salir del navegador. Respeta la hora de cada línea y etiqueta SQLi, traversal y webshells para que el motor de correlación los reconozca.
+- **Flags protegidas**: las respuestas de los retos se validan por hash SHA-256, sin guardarse en claro en el código.
 - **Portabilidad docente**: El alumno puede exportar sus retos superados y eventos anclados a una cadena Base64 para entregarla o continuar en otro equipo.
 
 ---
@@ -96,21 +97,16 @@ El proyecto está listo para publicarse de forma gratuita en **GitHub Pages** me
 ### Opción B: Despliegue automático con GitHub Actions
 El repositorio incluye el workflow [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml):
 1. Ve a **Settings → Pages → Source** y selecciona **GitHub Actions**.
-2. Cada `push` a `main` desplegará automáticamente el sitio estático.
+2. Cada `push` a `main` desplegará automáticamente el sitio estático (solo `index.html` y `assets/`).
 
 ---
 
 ## Ejecución en Local
 
-Puedes abrir `index.html` directamente con un servidor estático ligero o mediante Vite:
+No hay dependencias ni paso de compilación: basta con servir la carpeta con cualquier servidor estático.
 
 ```bash
-# Opción 1: Servidor estático simple con Python
 python3 -m http.server 3000
-
-# Opción 2: Con Node / Vite
-npm install
-npm run dev
 ```
 
 Abre `http://localhost:3000` en tu navegador.
@@ -130,8 +126,6 @@ Abre `http://localhost:3000` en tu navegador.
 │       └── icono_81a3db5b.png   # Logo oficial para despliegue estático directo
 ├── docs/
 │   └── screenshots/             # Capturas reales de todos los módulos
-├── public/
-│   └── assets/aistudio/         # Copia estática compatible con Vite build
 ├── index.html                   # Aplicación completa 100% frontend (HTML + Tailwind + Vanilla JS)
 ├── LICENSE                      # Licencia MIT
 └── README.md                    # Documentación del proyecto

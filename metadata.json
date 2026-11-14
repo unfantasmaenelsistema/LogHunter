@@ -1,6 +1,0 @@
-{
-  "name": "LogHunter",
-  "description": "Simulador y entrenador educativo Blue Team 100% frontend para analizar logs y correlacionar eventos.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LogHunter — Simulador Blue Team y Análisis de Logs</title>
+  <link rel="icon" type="image/png" href="assets/aistudio/icono_81a3db5b.png" />
   <meta name="description" content="Simulador y entrenador educativo Blue Team 100% frontend para analizar logs de Windows Security, Linux auth.log y servidores Web, y correlacionar eventos de seguridad." />
   <meta property="og:title" content="LogHunter — Simulador Blue Team y Análisis de Logs" />
   <meta property="og:description" content="Entrenador educativo Blue Team para análisis de logs, líneas temporales de ataque, reglas Sigma y escenarios CTF." />
@@ -257,10 +258,12 @@
           <button
             id="btn-regenerate-logs"
             type="button"
+            title="Regenerar Dataset"
+            aria-label="Regenerar Dataset"
             class="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-zinc-700 bg-zinc-800 px-3.5 py-2 text-xs font-medium text-zinc-100 transition-colors duration-150 hover:border-emerald-500/60 hover:bg-zinc-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
             <i class="fa-solid fa-rotate text-emerald-400" aria-hidden="true"></i>
-            <span>Regenerar Dataset</span>
+            <span class="hidden sm:inline">Regenerar Dataset</span>
           </button>
         </div>
       </header>
@@ -707,7 +710,7 @@
                     >
                       <option value="experimental" selected>experimental</option>
                       <option value="test">test</option>
-                      <option value="release">release</option>
+                      <option value="stable">stable</option>
                     </select>
                   </div>
 
@@ -840,7 +843,7 @@
                     class="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-emerald-300 placeholder-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <p class="mt-1.5 text-[11px] text-zinc-500">
-                    Operadores soportados: <code class="font-mono text-zinc-400">and</code>, <code class="font-mono text-zinc-400">or</code>, <code class="font-mono text-zinc-400">not</code> y paréntesis. Modificadores de campo: <code class="font-mono text-zinc-400">|contains</code>, <code class="font-mono text-zinc-400">|startswith</code>, <code class="font-mono text-zinc-400">|endswith</code>. Separa múltiples valores con coma.
+                    Operadores soportados: <code class="font-mono text-zinc-400">and</code>, <code class="font-mono text-zinc-400">or</code>, <code class="font-mono text-zinc-400">not</code>, paréntesis y agregaciones <code class="font-mono text-zinc-400">1 of selection*</code> / <code class="font-mono text-zinc-400">all of them</code>. Modificadores de campo: <code class="font-mono text-zinc-400">|contains</code>, <code class="font-mono text-zinc-400">|startswith</code>, <code class="font-mono text-zinc-400">|endswith</code>. Separa múltiples valores con coma.
                   </p>
                 </div>
               </div>
@@ -1299,6 +1302,7 @@
               <li><code class="font-mono text-sky-300">processName|endswith</code>: Coincide con el sufijo (ej. <code class="text-emerald-300">\powershell.exe</code>).</li>
               <li><strong class="text-zinc-100">Listas OR</strong>: Separa valores con coma (<code class="font-mono text-emerald-300">4720, 4732</code>) para evaluar cualquiera de ellos.</li>
               <li><strong class="text-zinc-100">Exclusión de falsos positivos</strong>: Usa <code class="font-mono text-emerald-300">selection1 and not selection2</code> en <em>condition</em>.</li>
+              <li><strong class="text-zinc-100">Agregaciones</strong>: <code class="font-mono text-emerald-300">1 of selection*</code> (al menos un bloque cuyo nombre empiece por <em>selection</em>) y <code class="font-mono text-emerald-300">all of them</code> (todos los bloques).</li>
             </ul>
           </div>
         </div>
@@ -1381,6 +1385,57 @@
        * - Linux auth.log (SSH Accepted/Failed/Invalid user, sesiones sudo)
        * - Web Access Apache/Nginx (GET/POST, códigos 200/403/404/500, SQLi, Directory Traversal)
        */
+      /**
+       * SHA-256 en JavaScript puro (síncrono). Se usa para validar las flags del modo CTF sin
+       * guardar las respuestas en claro en el código. Disponible también fuera de contextos seguros.
+       * @param {string} message
+       * @returns {string} Hash hexadecimal en minúsculas.
+       */
+      function sha256Hex(message) {
+        const K = new Uint32Array([
+          0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+          0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+          0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+          0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+          0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+          0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+          0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+          0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+        ]);
+        const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+        const bytes = new TextEncoder().encode(String(message));
+        const len = bytes.length;
+        const padded = new Uint8Array(((len + 9 + 63) >> 6) << 6);
+        padded.set(bytes);
+        padded[len] = 0x80;
+        const view = new DataView(padded.buffer);
+        view.setUint32(padded.length - 8, Math.floor(len / 0x20000000));
+        view.setUint32(padded.length - 4, (len << 3) >>> 0);
+        const W = new Uint32Array(64);
+        const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+        for (let off = 0; off < padded.length; off += 64) {
+          for (let i = 0; i < 16; i++) W[i] = view.getUint32(off + i * 4);
+          for (let i = 16; i < 64; i++) {
+            const s0 = rotr(W[i - 15], 7) ^ rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
+            const s1 = rotr(W[i - 2], 17) ^ rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
+            W[i] = (W[i - 16] + s0 + W[i - 7] + s1) >>> 0;
+          }
+          let a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+          for (let i = 0; i < 64; i++) {
+            const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+            const ch = (e & f) ^ (~e & g);
+            const t1 = (h + S1 + ch + K[i] + W[i]) >>> 0;
+            const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+            const maj = (a & b) ^ (a & c) ^ (b & c);
+            const t2 = (S0 + maj) >>> 0;
+            h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+          }
+          H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+          H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+        }
+        return Array.from(H, (x) => x.toString(16).padStart(8, '0')).join('');
+      }
+
       class LogDataEngine {
         constructor() {
           this.logs = [];
@@ -1720,6 +1775,8 @@
           this.activeDetailId = null;
           this.activeDetailList = [];
           this.detailTab = 'json';
+          /** @type {Function|null} Se invoca tras un pivote para llevar al usuario al Explorador. */
+          this.onPivot = null;
 
           this.filters = {
             query: '',
@@ -1913,6 +1970,8 @@
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !this.detailOverlay.classList.contains('hidden')) {
               this.closeDetail();
+              // El drawer es la capa superior: el Escape no debe cerrar también el modal que haya debajo
+              e.stopImmediatePropagation();
             }
           });
         }
@@ -2460,6 +2519,7 @@
           this.currentPage = 1;
           this.closeDetail();
           this.applyFilters();
+          if (typeof this.onPivot === 'function') this.onPivot();
         }
 
         openDetail(logId, customList = null) {
@@ -2736,13 +2796,20 @@
          * Sincroniza los eventos anclados cuando se regenera el dataset completo.
          * @param {Array<Object>} freshLogs
          */
-        reconcileWithDataset(freshLogs) {
-          const validIds = new Set(freshLogs.map((l) => l.id));
-          for (let i = window.pinnedTimelineEvents.length - 1; i >= 0; i--) {
-            if (!validIds.has(window.pinnedTimelineEvents[i].id)) {
-              window.pinnedTimelineEvents.splice(i, 1);
-            }
+        reconcileWithDataset(freshLogs, options = {}) {
+          const { keepOrphans = false } = options;
+          // Cada anclado pasa a apuntar al evento vivo con el mismo ID (misma hora que en el Explorador).
+          // Los que ya no existen se descartan, salvo que se pida conservarlos (importación Base64).
+          const liveById = new Map(freshLogs.map((l) => [l.id, l]));
+          const next = [];
+          for (const ev of window.pinnedTimelineEvents) {
+            const live = liveById.get(ev.id);
+            if (live) next.push(live);
+            else if (keepOrphans) next.push(ev);
           }
+          window.pinnedTimelineEvents.length = 0;
+          window.pinnedTimelineEvents.push(...next);
+          this.sortPinnedEvents();
           this.hasAnalyzed = false;
           this.lastFindings = [];
           this.render();
@@ -2780,6 +2847,16 @@
 
         _extractIp(entry) {
           return entry.sourceIp || entry.clientIp || null;
+        }
+
+        /**
+         * Nombre corto del ejecutable (processName o, si falta, primer token de commandLine).
+         * @param {Object} entry
+         * @returns {string}
+         */
+        _processBaseName(entry) {
+          const source = entry.processName || String(entry.commandLine || '').trim().split(/\s+/)[0] || 'proceso';
+          return String(source).replace(/^"+|"+$/g, '').split(/[\\/]/).pop() || 'proceso';
         }
 
         _formatDelta(msA, msB) {
@@ -2953,7 +3030,7 @@
           }
 
           // 5. Intrusión SSH + Escalamiento sudo en Linux
-          const sshFails = linuxEvents.filter((e) => e.action === 'Failed password' || e.action === 'Invalid user');
+          const sshFails = linuxEvents.filter((e) => /^(Failed (password|publickey|keyboard-interactive|auth)|Invalid user)/.test(e.action || ''));
           const sshSuccess = linuxEvents.filter((e) => e.action === 'Accepted password');
           const sudoPriv = linuxEvents.filter((e) => e.process === 'sudo' && e.severity !== 'info');
           if ((sshFails.length >= 1 && sshSuccess.length >= 1) || (sshSuccess.length >= 1 && sudoPriv.length >= 1)) {
@@ -2975,7 +3052,7 @@
               severity: 'high',
               title: 'Ejecución Sospechosa de Comandos / LOLBins (Event ID 4688)',
               mitre: 'MITRE ATT&CK: T1059.001 (PowerShell) / T1105 (Ingress Tool Transfer)',
-              description: `Se detectaron ${winSusProc.length} proceso(s) anómalo(s) en Windows (${[...new Set(winSusProc.map((p) => p.processName.split('\\').pop()))].join(', ')}).`,
+              description: `Se detectaron ${winSusProc.length} proceso(s) anómalo(s) en Windows (${[...new Set(winSusProc.map((p) => this._processBaseName(p)))].join(', ')}).`,
               evidenceIds: winSusProc.map((x) => x.id)
             });
           }
@@ -2983,10 +3060,25 @@
           return findings;
         }
 
+        /**
+         * Ejecuta las reglas sin dejar la interfaz bloqueada si algún evento importado trae campos inesperados.
+         * @returns {Array<Object>}
+         */
+        _safeEvaluate() {
+          try {
+            this.lastError = null;
+            return this.evaluateCorrelationRules();
+          } catch (err) {
+            console.error('LogHunter: error en el motor de correlación', err);
+            this.lastError = err;
+            return [];
+          }
+        }
+
         analyzeCorrelation() {
           if (!window.pinnedTimelineEvents.length) return;
           this.hasAnalyzed = true;
-          this.lastFindings = this.evaluateCorrelationRules();
+          this.lastFindings = this._safeEvaluate();
           this.renderCorrelationPanel();
         }
 
@@ -2997,6 +3089,16 @@
           }
 
           this.correlationPanel.classList.remove('hidden');
+
+          if (this.lastError) {
+            this.correlationSummary.textContent = 'Error al analizar';
+            this.correlationList.innerHTML = `
+              <div class="rounded-md border border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-200" role="alert">
+                No se pudo completar el análisis: algún evento anclado tiene un formato inesperado (${this._escapeHtml(this.lastError.message || this.lastError)}). Quita el evento importado problemático y vuelve a intentarlo.
+              </div>
+            `;
+            return;
+          }
 
           if (this.lastFindings.length === 0) {
             this.correlationSummary.textContent = '0 patrones críticos detectados';
@@ -3169,7 +3271,7 @@
 
         exportReport(format) {
           if (!window.pinnedTimelineEvents.length) return;
-          const findings = this.evaluateCorrelationRules();
+          const findings = this._safeEvaluate();
           const now = new Date();
           const stamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 16);
 
@@ -3300,7 +3402,7 @@
             },
             persistence_admin: {
               title: 'Creación de Usuario y Elevación a Grupo Privilegiado',
-              status: 'release',
+              status: 'stable',
               author: 'Analista Blue Team',
               level: 'critical',
               category: 'account_management',
@@ -3651,6 +3753,28 @@
           });
         }
 
+        /**
+         * Devuelve un escalar YAML de texto: plano si es seguro, entre comillas simples si no
+         * (dos puntos seguidos de espacio, " #", indicadores iniciales, números o booleanos).
+         * @param {string} rawVal
+         * @returns {string}
+         */
+        _yamlText(rawVal) {
+          const str = String(rawVal ?? '').trim();
+          const needsQuotes =
+            str === '' ||
+            /^[-?:,\[\]{}#&*!|>'"%@`]/.test(str) ||
+            /:(\s|$)|\s#/.test(str) ||
+            /^(true|false|null|yes|no|on|off|~)$/i.test(str) ||
+            /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(str);
+          return needsQuotes ? `'${str.replace(/'/g, "''")}'` : str;
+        }
+
+        _yamlKey(rawKey) {
+          const key = String(rawKey).trim();
+          return /^[A-Za-z0-9_.|-]+$/.test(key) ? key : `'${key.replace(/'/g, "''")}'`;
+        }
+
         _formatYamlScalar(rawVal) {
           const trimmed = String(rawVal).trim();
           if (/^-?\d+(\.\d+)?$/.test(trimmed)) return trimmed;
@@ -3664,13 +3788,13 @@
          * @returns {string}
          */
         buildYamlString() {
-          const today = new Date().toISOString().slice(0, 10).replace(/-/g, '/');
+          const today = new Date().toISOString().slice(0, 10);
           const lines = [
-            `title: ${this.state.title || 'Sin título'}`,
+            `title: ${this._yamlText(this.state.title || 'Sin título')}`,
             `id: ${this.ruleUuid}`,
             `status: ${this.state.status}`,
             `description: Regla Sigma generada en LogHunter`,
-            `author: ${this.state.author || 'Analista'}`,
+            `author: ${this._yamlText(this.state.author || 'Analista')}`,
             `date: ${today}`,
             `logsource:`,
             `  category: ${this.state.category}`,
@@ -3687,7 +3811,7 @@
               lines.push(`    # Añade al menos un campo clave-valor`);
             } else {
               for (const pair of validPairs) {
-                const key = pair.key.trim();
+                const key = this._yamlKey(pair.key);
                 const values = String(pair.value)
                   .split(',')
                   .map((v) => v.trim())
@@ -3705,7 +3829,7 @@
             }
           }
 
-          lines.push(`  condition: ${this.state.condition.trim() || 'selection'}`);
+          lines.push(`  condition: ${this._yamlText(this.state.condition.trim() || 'selection')}`);
           lines.push(`falsepositives:`);
           lines.push(`  - Actividad administrativa legítima autorizada`);
           lines.push(`level: ${this.state.level}`);
@@ -3851,6 +3975,14 @@
           return true;
         }
 
+        /**
+         * Evalúa la condición Sigma. Soporta and / or / not, paréntesis y agregaciones
+         * "1 of selection*", "all of them", "any of filtro*". Lanza Error con un mensaje
+         * en español si la condición referencia bloques inexistentes o está mal formada.
+         * @param {string} conditionStr
+         * @param {Object<string, boolean>} selMap
+         * @returns {boolean}
+         */
         _evaluateConditionExpr(conditionStr, selMap) {
           const tokens = (conditionStr || 'selection')
             .replace(/\(/g, ' ( ')
@@ -3858,12 +3990,28 @@
             .trim()
             .split(/\s+/)
             .filter(Boolean);
+          if (tokens.length === 0) throw new Error('La condición está vacía.');
 
+          const names = Object.keys(selMap);
+          const has = (name) => Object.prototype.hasOwnProperty.call(selMap, name);
+          const lower = (t) => String(t || '').toLowerCase();
           let pos = 0;
+
+          const resolveTargets = (pattern) => {
+            if (lower(pattern) === 'them') return names;
+            if (pattern.includes('*')) {
+              const re = new RegExp('^' + pattern.split('*').map((p) => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$');
+              const matched = names.filter((n) => re.test(n));
+              if (!matched.length) throw new Error(`Ningún bloque coincide con el patrón "${pattern}".`);
+              return matched;
+            }
+            if (!has(pattern)) throw new Error(`El bloque "${pattern}" no existe (bloques definidos: ${names.join(', ')}).`);
+            return [pattern];
+          };
 
           const parseOr = () => {
             let left = parseAnd();
-            while (pos < tokens.length && tokens[pos].toLowerCase() === 'or') {
+            while (pos < tokens.length && lower(tokens[pos]) === 'or') {
               pos++;
               const right = parseAnd();
               left = left || right;
@@ -3873,7 +4021,7 @@
 
           const parseAnd = () => {
             let left = parseNot();
-            while (pos < tokens.length && tokens[pos].toLowerCase() === 'and') {
+            while (pos < tokens.length && lower(tokens[pos]) === 'and') {
               pos++;
               const right = parseNot();
               left = left && right;
@@ -3882,7 +4030,7 @@
           };
 
           const parseNot = () => {
-            if (pos < tokens.length && tokens[pos].toLowerCase() === 'not') {
+            if (pos < tokens.length && lower(tokens[pos]) === 'not') {
               pos++;
               return !parseNot();
             }
@@ -3890,20 +4038,35 @@
           };
 
           const parsePrimary = () => {
-            if (pos >= tokens.length) return false;
+            if (pos >= tokens.length) throw new Error('La condición termina de forma inesperada (falta un bloque tras el operador).');
             const tok = tokens[pos];
             if (tok === '(') {
               pos++;
               const val = parseOr();
-              if (pos < tokens.length && tokens[pos] === ')') pos++;
+              if (tokens[pos] !== ')') throw new Error('Falta un paréntesis de cierre ")".');
+              pos++;
               return val;
             }
+            if (tok === ')') throw new Error('Hay un paréntesis ")" sin abrir.');
+            if (/^(\d+|all|any)$/i.test(tok) && lower(tokens[pos + 1]) === 'of') {
+              pos += 2;
+              if (pos >= tokens.length) throw new Error(`Falta el objetivo de "${tok} of" (p. ej. selection* o them).`);
+              const targets = resolveTargets(tokens[pos]);
+              pos++;
+              const hits = targets.filter((n) => selMap[n]).length;
+              if (lower(tok) === 'all') return hits === targets.length;
+              if (lower(tok) === 'any') return hits >= 1;
+              return hits >= Number(tok);
+            }
+            if (['and', 'or', 'not', 'of'].includes(lower(tok))) throw new Error(`El operador "${tok}" está fuera de lugar.`);
+            if (!has(tok)) throw new Error(`El bloque "${tok}" no existe (bloques definidos: ${names.join(', ')}).`);
             pos++;
             return Boolean(selMap[tok]);
           };
 
-          if (tokens.length === 0) return false;
-          return parseOr();
+          const result = parseOr();
+          if (pos < tokens.length) throw new Error(`Sobra "${tokens[pos]}" en la condición: une los bloques con and / or.`);
+          return result;
         }
 
         _matchesLogsource(entry) {
@@ -3917,6 +4080,27 @@
         runTestAgainstLogs() {
           const allLogs = this.engine.getLogs();
           const conditionText = this.state.condition.trim() || 'selection';
+
+          // Validar la condición una sola vez antes de recorrer los logs
+          const selNames = this.state.selections.map((sel) => sel.name);
+          const duplicated = selNames.find((n, i) => selNames.indexOf(n) !== i);
+          this.lastConditionError = null;
+          if (duplicated) {
+            this.lastConditionError = `Hay más de un bloque llamado "${duplicated}": renombra uno de ellos.`;
+          } else {
+            try {
+              const probe = {};
+              selNames.forEach((n) => { probe[n] = false; });
+              this._evaluateConditionExpr(conditionText, probe);
+            } catch (err) {
+              this.lastConditionError = err.message;
+            }
+          }
+          if (this.lastConditionError) {
+            this.lastMatchedLogs = [];
+            this.openTestModal(allLogs.length, conditionText);
+            return;
+          }
 
           this.lastMatchedLogs = allLogs.filter((entry) => {
             if (!this._matchesLogsource(entry)) return false;
@@ -3947,7 +4131,16 @@
           this.modalTitle.textContent = this.state.title || 'Regla Sigma sin título';
           this.modalCondition.textContent = conditionText;
 
-          if (matches.length === 0) {
+          if (this.lastConditionError) {
+            this.modalMatchCount.textContent = 'condición no válida';
+            this.modalBody.innerHTML = `
+              <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-rose-500/40 bg-rose-500/10 px-6 py-12 text-center" role="alert">
+                <i class="fa-solid fa-triangle-exclamation mb-3 text-xl text-rose-300" aria-hidden="true"></i>
+                <p class="text-sm font-medium text-rose-100">La condición no se puede evaluar</p>
+                <p class="mt-1.5 max-w-md text-xs leading-relaxed text-rose-200">${this._escapeHtml(this.lastConditionError)}</p>
+              </div>
+            `;
+          } else if (matches.length === 0) {
             this.modalBody.innerHTML = `
               <div class="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-950 px-6 py-12 text-center">
                 <i class="fa-solid fa-circle-info mb-3 text-xl text-zinc-500" aria-hidden="true"></i>
@@ -4083,6 +4276,7 @@
           this.activeScenarioId = null;
           this.selectedScenarioId = 'ctf-1';
           this.completedScenarios = new Set();
+          this.solvedAnswers = {}; // { scenarioId: respuesta introducida por el alumno }
           this.hintVisible = false;
           this.lastFlagResult = null; // { ok: boolean, message: string, scenarioId: string }
 
@@ -4180,20 +4374,16 @@
               flagPlaceholder: 'Ej. 03:42 o 03:42:18',
               flagFormat: 'Formato esperado: HH:MM o HH:MM:SS (UTC)',
               hint: 'Aísla el EventID 4625 para localizar la IP externa con múltiples fallos RDP y luego busca el EventID 4624 desde esa misma IP.',
-              validateFlag: (input) => {
-                const norm = input.trim().toLowerCase().replace(/\s+/g, '');
-                const valid = new Set([
-                  '03:42',
-                  '03:42:18',
-                  '03:42utc',
-                  '03:42:18utc',
-                  '03:42:18z',
-                  '2026-11-14t03:42:18z',
-                  '2026-11-14t03:42:18.000z'
-                ]);
-                return valid.has(norm);
-              },
-              acceptedDisplay: '03:42:18 UTC (IP 94.156.66.218 · usuario becario_it)',
+              // SHA-256 de "loghunter|ctf-1|<respuesta normalizada>" (variantes HH:MM, HH:MM:SS, UTC, ISO)
+              flagHashes: [
+                'da65fc824ed2fa6ff5c58ea390f2a22107fb126d073f2673a09cd2f36120bc15',
+                'b72d1530a94eb7dd9c9d7a4b423ca8b7b10e8bc8c99e7f05c8773ecd2e504ccd',
+                '7fc2b6fc8abd84e344bed21f98bf6f60a386234d70257d3bb56006b6fc5df154',
+                'b856b66e6852e21e9651a878acc51542a4a21389dec528eb5160fb2e24e12ee5',
+                '40d1f9ac6e7f22ab691883e27453ae58de8148af711b68105b10370b4f2d7449',
+                '131de2f9478dc337cdc51d98c6306dae6315d8a0729f82ef6b1c412ef8cfd1a9',
+                '348b3c71ab3a5e94b298e1e0e80b92384ae35a4dd1a6853d2557b6f6aa035a57'
+              ],
               records: [
                 this._winRecord('CTF1-WIN-001', '2026-11-14T01:12:04.000Z', 'WS-HD-03.corp.local', 4624, 'info', 'soporte.n1', 'CORP', '10.20.5.12', 50412, 2, 'Interactive', 'C:\\Windows\\System32\\userinit.exe', null, null, '0x0', 'Inicio de sesión interactivo rutinario de HelpDesk.'),
                 this._winRecord('CTF1-WIN-002', '2026-11-14T02:05:31.000Z', 'DC01.corp.local', 4624, 'info', 'svc_updates', 'CORP', '10.20.1.40', 49100, 3, 'Network', 'C:\\Windows\\System32\\lsass.exe', null, null, '0x0', 'Sincronización nocturna WSUS desde servidor interno.'),
@@ -4226,8 +4416,7 @@
               flagPlaceholder: 'Ej. nombre_usuario_oculto',
               flagFormat: 'Formato esperado: Nombre exacto de la cuenta de usuario creada',
               hint: 'Filtra en Windows Security por EventID 4720 y 4732 para ver qué cuenta fue dada de alta e incluida en el grupo Administrators antes del evento 1102.',
-              validateFlag: (input) => input.trim().toLowerCase() === 'ghost_svc_adm',
-              acceptedDisplay: 'ghost_svc_adm (creada tras RCE web desde 178.128.92.44)',
+              flagHashes: ['e406e3f213998d615195d507de8274e24fa9df362c204160d00b602737b97618'],
               records: [
                 this._webRecord('CTF2-WEB-001', '2026-11-14T07:55:12.000Z', 'edge-nginx-01', 'info', 'GET', '/', '', 200, 15240, '81.45.12.90', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/129.0.0.0', 'https://www.google.com/', null, 'Visita legítima al portal público.'),
                 this._webRecord('CTF2-WEB-002', '2026-11-14T08:11:04.000Z', 'edge-nginx-01', 'medium', 'GET', '/.env', '', 403, 548, '178.128.92.44', 'Nuclei - Open-source project', '-', 'Sensitive File Exposure Probe', 'Sondeo inicial bloqueado hacia archivo de entorno.'),
@@ -4255,9 +4444,8 @@
               objective: 'Filtra los logs de Linux auth.log, descarta las IPs que solo generaron fallos, correlaciona el evento Accepted password con las sesiones sudo críticas e introduce la dirección IP del atacante.',
               flagPlaceholder: 'Ej. 203.0.113.45',
               flagFormat: 'Formato esperado: Dirección IPv4 exacta del atacante',
-              hint: 'Busca la acción "Accepted password" en auth.log y verifica que esa misma IP/usuario aparezca ejecutando comandos críticos en sudoers (/etc/shadow, usermod).',
-              validateFlag: (input) => input.trim() === '195.54.160.149',
-              acceptedDisplay: '195.54.160.149 (compromiso de operador_n2 y escalada con sudo)',
+              hint: 'Busca la acción "Accepted password" en auth.log y verifica que esa misma IP/usuario aparezca ejecutando comandos críticos en sudoers (/etc/shadow, useradd).',
+              flagHashes: ['64b946f72546a6df26a0a476abe261672e185756a94c093d21a5098d67c56315'],
               records: [
                 this._linuxRecord('CTF3-LNX-001', '2026-11-14T09:40:10.000Z', 'srv-prod-02', 'sshd', 30112, 'info', 'Accepted publickey', 'ana.vega', '10.8.0.19', 50214, 'publickey', null, 'Accepted publickey for ana.vega from 10.8.0.19 port 50214 ssh2: ED25519 SHA256:tR2pK9...1m'),
                 this._linuxRecord('CTF3-LNX-002', '2026-11-14T09:41:28.000Z', 'srv-prod-02', 'sudo', 30145, 'info', 'sudo session', 'ana.vega', '10.8.0.19', null, 'pam_unix', '/usr/bin/journalctl -u docker -n 50', 'ana.vega : TTY=pts/0 ; PWD=/home/ana.vega ; USER=root ; COMMAND=/usr/bin/journalctl -u docker -n 50'),
@@ -4353,6 +4541,28 @@
           return new TextDecoder().decode(bytes);
         }
 
+        /**
+         * Comprueba la flag comparando su hash con los aceptados del escenario.
+         * @param {Object} scenario
+         * @param {string} input
+         * @returns {boolean}
+         */
+        _checkFlag(scenario, input) {
+          const norm = String(input).trim().toLowerCase().replace(/\s+/g, '');
+          if (!norm) return false;
+          return scenario.flagHashes.includes(sha256Hex(`loghunter|${scenario.id}|${norm}`));
+        }
+
+        _sanitizeAnswers(raw, validIds) {
+          const out = {};
+          if (raw && typeof raw === 'object') {
+            for (const [id, val] of Object.entries(raw)) {
+              if (validIds.has(id) && typeof val === 'string') out[id] = val.slice(0, 120);
+            }
+          }
+          return out;
+        }
+
         getScenarioById(id) {
           return this.scenarios.find((s) => s.id === id) || null;
         }
@@ -4402,6 +4612,7 @@
 
         resetProgress() {
           this.completedScenarios.clear();
+          this.solvedAnswers = {};
           this.lastFlagResult = null;
           this.hintVisible = false;
           this.activeScenarioId = null;
@@ -4426,6 +4637,7 @@
               app: 'LogHunter',
               activeScenarioId: this.activeScenarioId,
               completedScenarios: Array.from(this.completedScenarios),
+              solvedAnswers: this.solvedAnswers,
               pinnedEvents: window.pinnedTimelineEvents.map((ev) => ({ ...ev }))
             };
             window.localStorage.setItem(this.storageKey, JSON.stringify(payload));
@@ -4441,6 +4653,7 @@
 
             const validIds = new Set(this.scenarios.map((s) => s.id));
             this.completedScenarios = new Set(data.completedScenarios.filter((id) => validIds.has(id)));
+            this.solvedAnswers = this._sanitizeAnswers(data.solvedAnswers, validIds);
 
             if (data.activeScenarioId && validIds.has(data.activeScenarioId)) {
               this.activeScenarioId = data.activeScenarioId;
@@ -4454,6 +4667,8 @@
 
             if (Array.isArray(data.pinnedEvents) && data.pinnedEvents.length > 0) {
               this.timeline.setPinnedEvents(data.pinnedEvents);
+              // El sandbox se regenera en cada carga: alinear los anclados con el dataset actual
+              this.timeline.reconcileWithDataset(this.engine.getLogs());
             }
           } catch {}
         }
@@ -4473,13 +4688,14 @@
             return;
           }
 
-          const isValid = scenario.validateFlag(trimmed);
+          const isValid = this._checkFlag(scenario, trimmed);
           if (isValid) {
             this.completedScenarios.add(scenario.id);
+            this.solvedAnswers[scenario.id] = trimmed;
             this.lastFlagResult = {
               ok: true,
               scenarioId: scenario.id,
-              message: `¡Flag correcta! Incidente "${scenario.title}" resuelto (${scenario.acceptedDisplay}).`
+              message: `¡Flag correcta! Incidente "${scenario.title}" resuelto (respuesta validada: ${trimmed}).`
             };
             this.saveToLocalStorage();
           } else {
@@ -4500,6 +4716,7 @@
             exportedAt: new Date().toISOString(),
             activeScenarioId: this.activeScenarioId,
             completedScenarios: Array.from(this.completedScenarios),
+            solvedAnswers: this.solvedAnswers,
             pinnedEvents: window.pinnedTimelineEvents.map((ev) => ({ ...ev }))
           };
 
@@ -4554,6 +4771,7 @@
 
             const validIds = new Set(this.scenarios.map((s) => s.id));
             this.completedScenarios = new Set(data.completedScenarios.filter((id) => validIds.has(id)));
+            this.solvedAnswers = this._sanitizeAnswers(data.solvedAnswers, validIds);
 
             if (data.activeScenarioId && validIds.has(data.activeScenarioId)) {
               this.activateScenario(data.activeScenarioId, { preservePins: true, navigateToExplorer: false });
@@ -4568,6 +4786,9 @@
 
             if (Array.isArray(data.pinnedEvents)) {
               this.timeline.setPinnedEvents(data.pinnedEvents);
+              // Conserva la evidencia de logs que no están en memoria (p. ej. importados por el alumno)
+              this.timeline.reconcileWithDataset(this.engine.getLogs(), { keepOrphans: true });
+              this.saveToLocalStorage();
             }
 
             this.renderAll();
@@ -4752,7 +4973,7 @@
             feedbackHtml = `
               <div class="mt-4 flex items-center gap-2.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-300">
                 <i class="fa-solid fa-circle-check shrink-0" aria-hidden="true"></i>
-                <span>Escenario completado. Evidencia validada: <strong class="font-mono text-emerald-200">${this._escapeHtml(sc.acceptedDisplay)}</strong></span>
+                <span>Escenario completado.${this.solvedAnswers[sc.id] ? ` Respuesta validada: <strong class="font-mono text-emerald-200">${this._escapeHtml(this.solvedAnswers[sc.id])}</strong>` : ''}</span>
               </div>
             `;
           }
@@ -4897,6 +5118,12 @@
             () => this._handleDatasetChanged(),
             (viewKey) => this.setView(viewKey, true)
           );
+
+          // Un pivote lanzado desde la Línea Temporal o el modal Sigma debe mostrar el Explorador filtrado
+          this.explorer.onPivot = () => {
+            this.sigma.closeModal();
+            this.setView('explorer', true);
+          };
 
           this.viewsMeta = {
             explorer: { id: 'view-explorer', title: 'Explorador de Logs' },
@@ -5050,6 +5277,7 @@
                 '45.155.205.91 - - [14/Nov/2026:10:13:18 +0000] "POST /api/login?q=%27%20UNION%20SELECT%201-- HTTP/1.1" 200 4120 "-" "sqlmap/1.7"',
                 'Nov 14 10:15:22 srv-edge sshd[4122]: Failed password for root from 45.155.205.91 port 51200 ssh2',
                 'Nov 14 10:16:01 srv-edge sshd[4190]: Accepted password for deploy from 45.155.205.91 port 51288 ssh2',
+                'Nov 14 10:16:40 srv-edge sudo:   deploy : TTY=pts/0 ; PWD=/tmp ; USER=root ; COMMAND=/bin/cat /etc/shadow',
                 '{"timestamp":"2026-11-14T10:17:05.000Z","source":"windows_security","host":"SRV-CUSTOM-01","eventId":4688,"severity":"critical","accountName":"deploy","sourceIp":"45.155.205.91","commandLine":"powershell.exe -Enc JABXAGMAPQBOAGUAdwA=","message":"Proceso sospechoso importado desde JSON"}'
               ].join('\n');
             });
@@ -5080,36 +5308,162 @@
 
           const parsed = [];
           const nowIso = new Date().toISOString();
+          const append = Boolean(this.importAppendRadio && this.importAppendRadio.checked);
+          const usedIds = new Set(append ? this.engine.getLogs().map((l) => l.id) : []);
           let seq = Date.now() % 10000;
-          const nextCustomId = (prefix) => `IMP-${prefix}-${String(seq++).padStart(4, '0')}`;
+          const nextCustomId = (prefix) => {
+            let id;
+            do {
+              id = `IMP-${prefix}-${String(seq++).padStart(4, '0')}`;
+            } while (usedIds.has(id));
+            usedIds.add(id);
+            return id;
+          };
+          const claimId = (candidate, prefix) => {
+            if (candidate && !usedIds.has(String(candidate))) {
+              usedIds.add(String(candidate));
+              return String(candidate);
+            }
+            return nextCustomId(prefix);
+          };
+          const prefixFor = (source) => (source === 'windows_security' ? 'WIN' : source === 'web_access' ? 'WEB' : 'LNX');
+          const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
 
+          // Fecha CLF Apache/Nginx: 14/Nov/2026:10:12:04 +0000
+          const parseClfDate = (str) => {
+            const m = String(str).match(/^(\d{1,2})\/([A-Za-z]{3})\/(\d{4}):(\d{2}):(\d{2}):(\d{2})(?:\s*([+-])(\d{2})(\d{2}))?$/);
+            if (!m) return null;
+            const month = MONTHS[m[2].toLowerCase()];
+            if (month === undefined) return null;
+            let ms = Date.UTC(Number(m[3]), month, Number(m[1]), Number(m[4]), Number(m[5]), Number(m[6]));
+            if (m[7]) {
+              const offsetMin = (Number(m[8]) * 60 + Number(m[9])) * (m[7] === '+' ? 1 : -1);
+              ms -= offsetMin * 60 * 1000;
+            }
+            return new Date(ms).toISOString();
+          };
+
+          // Fecha syslog clásica (Nov 14 10:15:22: sin año, se asume UTC y el año en curso) o ISO 8601 (rsyslog)
+          const parseSyslogDate = (str) => {
+            if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
+              const iso = new Date(str);
+              return Number.isNaN(iso.getTime()) ? null : iso.toISOString();
+            }
+            const m = String(str).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+            if (!m) return null;
+            const month = MONTHS[m[1].toLowerCase()];
+            if (month === undefined) return null;
+            const now = new Date();
+            let year = now.getUTCFullYear();
+            let ms = Date.UTC(year, month, Number(m[2]), Number(m[3]), Number(m[4]), Number(m[5]));
+            // Un log de diciembre leído en enero pertenece al año anterior
+            if (ms - now.getTime() > 2 * 24 * 60 * 60 * 1000) {
+              year -= 1;
+              ms = Date.UTC(year, month, Number(m[2]), Number(m[3]), Number(m[4]), Number(m[5]));
+            }
+            return new Date(ms).toISOString();
+          };
+
+          const safeDecode = (str) => {
+            let out = String(str);
+            for (let i = 0; i < 2; i++) {
+              try {
+                const next = decodeURIComponent(out.replace(/\+/g, ' '));
+                if (next === out) break;
+                out = next;
+              } catch {
+                break;
+              }
+            }
+            return out;
+          };
+
+          // Clasifica peticiones web importadas con las mismas etiquetas que usa el motor de correlación
+          const classifyWebAttack = (rawUrl) => {
+            const decoded = safeDecode(rawUrl).toLowerCase();
+            const rawLower = String(rawUrl).toLowerCase();
+            if (/union\s+(all\s+)?select|'\s*or\s*'?1'?\s*=\s*'?1|order\s+by\s+\d+|sleep\(\d+\)|benchmark\(|information_schema/.test(decoded)) return 'SQL Injection';
+            if (/\.\.\/|\.\.\\|etc\/passwd|win\.ini|boot\.ini/.test(decoded) || /%2e%2e|%252f/.test(rawLower)) return 'Directory Traversal';
+            if (/[?&](cmd|exec|command)=|\/(shell|cmd|c99|r57|webshell)[^/]*\.(php|aspx?|jsp)/.test(decoded)) return 'Webshell Execution';
+            if (/\/\.env|\/\.git|wp-login\.php|phpmyadmin|\/actuator|\.bak$|\.old$|\/server-status/.test(decoded)) return 'Sensitive File Exposure Probe';
+            return null;
+          };
+
+          const SUSPICIOUS_SUDO = /\/bin\/(ba)?sh\b|\/etc\/shadow|chmod\s+\+s|chmod\s+[0-7]*4[0-7]{3}|useradd|usermod|visudo|passwd\b|\/etc\/sudoers|nc\s+-e|curl\s.*\|\s*(ba)?sh|wget\s/i;
+
+          // Interpreta mensajes de auth.log (sshd, sudo, pam) y devuelve campos normalizados
+          const parseAuthMessage = (proc, msg) => {
+            const p = proc.toLowerCase();
+            const out = { action: proc, user: '-', sourceIp: '-', sourcePort: null, authMethod: 'syslog', command: null, severity: 'info' };
+            let m;
+            if (p === 'sshd') {
+              if ((m = msg.match(/^Accepted (\S+) for (\S+) from (\S+) port (\d+)/))) {
+                Object.assign(out, { action: `Accepted ${m[1]}`, user: m[2], sourceIp: m[3], sourcePort: Number(m[4]), authMethod: m[1], severity: m[1] === 'password' ? 'high' : 'info' });
+              } else if ((m = msg.match(/^Failed (\S+) for (?:invalid user )?(\S+) from (\S+) port (\d+)/))) {
+                Object.assign(out, { action: `Failed ${m[1]}`, user: m[2], sourceIp: m[3], sourcePort: Number(m[4]), authMethod: m[1], severity: 'medium' });
+              } else if ((m = msg.match(/^Invalid user (\S*) from (\S+)(?: port (\d+))?/))) {
+                Object.assign(out, { action: 'Invalid user', user: m[1] || '-', sourceIp: m[2], sourcePort: m[3] ? Number(m[3]) : null, authMethod: 'password', severity: 'medium' });
+              } else if ((m = msg.match(/session (opened|closed) for user (\S+)/))) {
+                Object.assign(out, { action: `session ${m[1]}`, user: m[2], authMethod: 'pam_unix' });
+              }
+            } else if (p === 'sudo') {
+              if ((m = msg.match(/^\s*(\S+)\s*:\s*(.*?)COMMAND=(.+)$/))) {
+                const failed = /NOT in sudoers|incorrect password|authentication failure|command not allowed/i.test(m[2]);
+                Object.assign(out, {
+                  action: failed ? 'sudo auth failure' : 'sudo session',
+                  user: m[1],
+                  command: m[3].trim(),
+                  authMethod: 'pam_unix',
+                  severity: failed ? 'high' : SUSPICIOUS_SUDO.test(m[3]) ? 'critical' : 'info'
+                });
+              } else if (/authentication failure/i.test(msg)) {
+                const u = msg.match(/\buser=(\S+)/) || msg.match(/ruser=(\S+)/);
+                Object.assign(out, { action: 'sudo auth failure', user: u ? u[1] : '-', authMethod: 'pam_unix', severity: 'high' });
+              }
+            }
+            if (out.sourceIp === '-') {
+              const ipMatch = msg.match(/(\d{1,3}(?:\.\d{1,3}){3})/);
+              if (ipMatch) out.sourceIp = ipMatch[1];
+            }
+            if (out.user === '-') {
+              const userMatch = msg.match(/(?:for\s+(?:invalid\s+user\s+)?|user[\s=]+)([a-zA-Z0-9._-]+)/);
+              if (userMatch) out.user = userMatch[1];
+            }
+            if (out.action === proc && /failed|invalid|failure/i.test(msg)) {
+              out.action = 'Failed auth';
+              out.severity = 'medium';
+            }
+            return out;
+          };
+
+          const KNOWN_SOURCES = new Set(['windows_security', 'linux_auth', 'web_access']);
           const normalizeObject = (obj) => {
-            if (!obj || typeof obj !== 'object') return null;
-            const source = obj.source || (obj.eventId ? 'windows_security' : obj.statusCode ? 'web_access' : 'linux_auth');
-            return {
-              id: obj.id || nextCustomId(source === 'windows_security' ? 'WIN' : source === 'web_access' ? 'WEB' : 'LNX'),
-              timestamp: obj.timestamp || nowIso,
+            if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+            const source = KNOWN_SOURCES.has(obj.source)
+              ? obj.source
+              : (obj.eventId ? 'windows_security' : obj.statusCode ? 'web_access' : 'linux_auth');
+            const parsedTs = obj.timestamp ? new Date(obj.timestamp) : null;
+            const rec = {
+              ...obj,
+              id: claimId(obj.id, prefixFor(source)),
+              timestamp: parsedTs && !Number.isNaN(parsedTs.getTime()) ? parsedTs.toISOString() : nowIso,
               source,
               host: obj.host || 'custom-host',
-              severity: obj.severity || 'medium',
-              eventId: obj.eventId || undefined,
-              accountName: obj.accountName || undefined,
-              user: obj.user || undefined,
-              sourceIp: obj.sourceIp || undefined,
-              clientIp: obj.clientIp || undefined,
-              logonType: obj.logonType || undefined,
-              commandLine: obj.commandLine || undefined,
-              process: obj.process || undefined,
-              action: obj.action || undefined,
-              command: obj.command || undefined,
-              method: obj.method || undefined,
-              path: obj.path || undefined,
-              query: obj.query || '',
-              statusCode: obj.statusCode || undefined,
-              attackTag: obj.attackTag || null,
+              severity: ['critical', 'high', 'medium', 'low', 'info'].includes(obj.severity) ? obj.severity : 'medium',
               message: obj.message || JSON.stringify(obj),
               raw: obj.raw || JSON.stringify(obj)
             };
+            for (const numField of ['eventId', 'statusCode', 'logonType']) {
+              if (rec[numField] !== undefined && rec[numField] !== null && rec[numField] !== '' && !Number.isNaN(Number(rec[numField]))) {
+                rec[numField] = Number(rec[numField]);
+              }
+            }
+            if (source === 'web_access') {
+              rec.query = rec.query || '';
+              rec.path = rec.path || '/';
+              if (!rec.attackTag) rec.attackTag = classifyWebAttack(`${rec.path}${rec.query}`);
+            }
+            return rec;
           };
 
           let handledWholeJson = false;
@@ -5142,19 +5496,22 @@
               // Nginx / Apache CLF parser
               const clfMatch = line.match(/^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"(\S+)\s+(\S+)(?:\s+[^"]*)?"\s+(\d{3})\s+(\d+|-)(?:\s+"([^"]*)"\s+"([^"]*)")?/);
               if (clfMatch) {
-                const [, ip, , method, fullUrl, codeStr, bytesStr, ref = '-', ua = '-'] = clfMatch;
+                const [, ip, clfDate, method, fullUrl, codeStr, bytesStr, ref = '-', ua = '-'] = clfMatch;
                 const statusCode = Number(codeStr);
                 const qIdx = fullUrl.indexOf('?');
                 const path = qIdx >= 0 ? fullUrl.slice(0, qIdx) : fullUrl;
                 const query = qIdx >= 0 ? fullUrl.slice(qIdx) : '';
-                const isAttack = /union|select|\.\.|%252f|\.env|cmd=/i.test(fullUrl);
+                const attackTag = classifyWebAttack(fullUrl);
+                const severity = attackTag
+                  ? (statusCode === 200 && attackTag !== 'Sensitive File Exposure Probe' ? 'critical' : 'high')
+                  : statusCode >= 500 ? 'medium' : statusCode >= 400 ? 'low' : 'info';
                 parsed.push({
                   id: nextCustomId('WEB'),
-                  timestamp: nowIso,
+                  timestamp: parseClfDate(clfDate) || nowIso,
                   source: 'web_access',
                   host: 'imported-web',
                   server: 'nginx/imported',
-                  severity: isAttack && statusCode === 200 ? 'critical' : statusCode >= 400 || isAttack ? 'high' : 'info',
+                  severity,
                   method,
                   path,
                   query,
@@ -5164,35 +5521,33 @@
                   clientIp: ip,
                   userAgent: ua,
                   referer: ref,
-                  attackTag: isAttack ? 'Imported Suspicious Request' : null,
-                  message: `Petición importada ${method} ${path} (HTTP ${statusCode})`,
+                  attackTag,
+                  message: `Petición importada ${method} ${path} (HTTP ${statusCode})${attackTag ? ` · ${attackTag}` : ''}`,
                   raw: line
                 });
                 continue;
               }
 
-              // Linux Syslog auth.log parser
-              const sysMatch = line.match(/^(?:[A-Z][a-z]{2}\s+\d+\s+\d{2}:\d{2}:\d{2})\s+(\S+)\s+([^\[:]+)(?:\[(\d+)\])?:\s+(.+)$/);
+              // Linux Syslog auth.log parser (formato clásico o ISO 8601)
+              const sysMatch = line.match(/^([A-Z][a-z]{2}\s+\d+\s+\d{2}:\d{2}:\d{2}|\d{4}-\d{2}-\d{2}T\S+)\s+(\S+)\s+([^\[:\s]+)(?:\[(\d+)\])?:\s+(.+)$/);
               if (sysMatch) {
-                const [, host, proc, pid, msg] = sysMatch;
-                const ipMatch = msg.match(/(\d{1,3}(?:\.\d{1,3}){3})/);
-                const userMatch = msg.match(/(?:for\s+(?:invalid\s+user\s+)?|user\s+)([a-zA-Z0-9._-]+)/);
-                const isFail = /failed|invalid|failure/i.test(msg);
-                const isAcceptPass = /accepted password/i.test(msg);
+                const [, sysDate, host, proc, pid, msg] = sysMatch;
+                const fields = parseAuthMessage(proc.trim(), msg);
                 parsed.push({
                   id: nextCustomId('LNX'),
-                  timestamp: nowIso,
+                  timestamp: parseSyslogDate(sysDate) || nowIso,
                   source: 'linux_auth',
                   host,
                   facility: 'authpriv',
                   process: proc.trim(),
                   pid: pid ? Number(pid) : 0,
-                  severity: isAcceptPass ? 'high' : isFail ? 'medium' : 'info',
-                  action: isFail ? 'Failed auth' : isAcceptPass ? 'Accepted password' : proc.trim(),
-                  user: userMatch ? userMatch[1] : '-',
-                  sourceIp: ipMatch ? ipMatch[1] : '-',
-                  authMethod: 'syslog',
-                  command: null,
+                  severity: fields.severity,
+                  action: fields.action,
+                  user: fields.user,
+                  sourceIp: fields.sourceIp,
+                  sourcePort: fields.sourcePort,
+                  authMethod: fields.authMethod,
+                  command: fields.command,
                   message: msg,
                   raw: line
                 });
@@ -5225,7 +5580,6 @@
             return;
           }
 
-          const append = this.importAppendRadio && this.importAppendRadio.checked;
           if (this.ctf) {
             this.ctf.activeScenarioId = null;
           }
